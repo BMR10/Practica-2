@@ -1,0 +1,149 @@
+0001   0000             ; Autor: Ramirez Diez Brian Michel
+0002   0000             ; Nombre de programa: Validacion de nip
+0003   0000             .org 0000h
+0004   0000 3E 89       	ld a,89h
+0005   0002 21 40 20    	ld hl, Cont
+0006   0005 36 03       	ld (HL), 3
+0007   0007 D3 03       	out (CW),a
+0008   0009 31 FF 27    	ld SP, 27ffh
+0009   000C 21 00 20    	ld hl, tex1
+0010   000F CD 1B 00    	call disp_text
+0011   0012             cal:
+0012   0012 CD 28 00    	call read_pasw
+0013   0015 CD 51 00    	call Real
+0014   0018 CD 8D 00    	call erfinal
+0015   001B             
+0016   001B             ; sub rutinas
+0017   001B             
+0018   001B             disp_text:
+0019   001B             ; Emicion de 1er mensaje
+0020   001B             repeat1:
+0021   001B 7E          	ld a,(hl)
+0022   001C FE 26        	cp "&"
+0023   001E CA 27 00    	jp z, FT1
+0024   0021 D3 00       	out (LCD), a
+0025   0023 23          	inc hl
+0026   0024 C3 1B 00    	jp repeat1
+0027   0027             FT1:
+0028   0027 C9          	ret
+0029   0028             
+0030   0028             read_pasw:
+0031   0028             ; Introduccion de pasword
+0032   0028 21 14 20    	ld hl, passw
+0033   002B 06 04       	ld b, 4
+0034   002D             readt_other:
+0035   002D DB 01       	in a,(KEYB)
+0036   002F             ; comprobacion de ingresos
+0037   002F             ; unicamente de numeros
+0038   002F FE 30       	cp 30h
+0039   0031 DA 42 00    	jp C, hal
+0040   0034 FE 39       	cp 39h
+0041   0036 D2 42 00    	jp NC, hal
+0042   0039             ; salida en pantalla de "*"
+0043   0039 77          	ld (hl),a
+0044   003A 3E 2A       	ld a, 2ah
+0045   003C D3 00       	out (LCD), a
+0046   003E 23          	inc hl
+0047   003F 10 EC               djnz readt_other
+0048   0041 C9          	ret
+0049   0042             ; reiniciar el ingreso del nip
+0050   0042             hal:
+0051   0042 21 28 20    	ld hl, tex3
+0052   0045             rd2:
+0053   0045 7E          	ld a, (hl)
+0054   0046 FE 26        	cp "&"
+0055   0048 CA 28 00    	jp z, read_pasw
+0056   004B D3 00       	out (LCD), a
+0057   004D 23          	inc hl
+0058   004E C3 45 00    	jp rd2
+0059   0051             
+0060   0051             ; inicio de
+0061   0051             ; comprobacion de contraseña
+0062   0051             Real:
+0063   0051 21 14 20    	ld hl, passw
+0064   0054 11 10 20    	ld de, patron
+0065   0057 06 04       	ld b, 4
+0066   0059             lec:
+0067   0059 1A          	ld a, (DE)
+0068   005A 4E          	ld c, (HL)
+0069   005B B9          	cp c
+0070   005C C2 72 00    	jp NZ, equi
+0071   005F 13          	inc DE
+0072   0060 23          	inc HL
+0073   0061 10 F6       	djnz lec
+0074   0063             ; display de final
+0075   0063 21 18 20    	ld hl, tex2
+0076   0066             rd4:
+0077   0066 7E          	ld a, (hl)
+0078   0067 FE 26        	cp "&"
+0079   0069 CA 9C 00    	jp z, Fin
+0080   006C D3 00       	out (LCD), a
+0081   006E 23          	inc hl
+0082   006F C3 66 00    	jp rd4
+0083   0072             ; comienzo de errores
+0084   0072             
+0085   0072             equi:
+0086   0072 21 28 20    	ld HL, tex3
+0087   0075             ; decremento de contador intterno
+0088   0075             ; que maneja los intentos
+0089   0075 11 40 20    	ld DE, cont
+0090   0078 1A          	ld a, (DE)
+0091   0079 3D          	dec a
+0092   007A 12          	ld (DE), a
+0093   007B FE 00       	cp 0
+0094   007D C2 81 00    	jp NZ, Ni_idea
+0095   0080 C9          	ret
+0096   0081             Ni_idea:
+0097   0081 7E          	ld a, (hl)
+0098   0082 FE 26        	cp "&"
+0099   0084 CA 12 00    	jp z, cal
+0100   0087 D3 00       	out (LCD), a
+0101   0089 23          	inc hl
+0102   008A C3 81 00    	jp Ni_idea
+0103   008D             
+0104   008D             ; fin de intentos
+0105   008D             erfinal:
+0106   008D 21 33 20    	ld hl, tex4
+0107   0090             rd3:
+0108   0090 7E          	ld a, (hl)
+0109   0091 FE 26        	cp "&"
+0110   0093 CA 9C 00    	jp z, Fin
+0111   0096 D3 00       	out (LCD), a
+0112   0098 23          	inc hl
+0113   0099 C3 90 00    	jp rd3
+0114   009C             Fin:
+0115   009C 76          	halt
+0116   009D             
+0117   009D             ;segmento de datos
+0118   009D              .org 2000h
+0119   2000 49 6E 74 72 tex1:   .db "Introducir NIP &"
+0119   2004 6F 64 75 63 
+0119   2008 69 72 20 4E 
+0119   200C 49 50 20 26 
+0120   2010 31 32 33 34 patron  .db 31h,32h,33h,34h
+0121   2014 00 00 00 00 passw   .db 00h,00h,00h,00h
+0122   2018 41 63 63 65 tex2:   .db "Acceso Exitoso &"
+0122   201C 73 6F 20 45 
+0122   2020 78 69 74 6F 
+0122   2024 73 6F 20 26 
+0123   2028 54 72 79 20 tex3:	.db "Try again &"
+0123   202C 61 67 61 69 
+0123   2030 6E 20 26    
+0124   2033 66 61 6C 6C tex4:   .db "fallo total &"
+0124   2037 6F 20 74 6F 
+0124   203B 74 61 6C 20 
+0124   203F 26          
+0125   2040 03          Cont:   .db 03h
+0126   2041             
+0127   2041             
+0128   2041             ;constante
+0129   2041             
+0130   2041             LCD: .equ 00h
+0131   2041             KEYB: .equ 01h
+0132   2041             CW:    .equ 03h
+0133   2041             
+0134   2041             
+0135   2041             end
+0136   2041             
+0137   2041             
+Number of errors = 0
